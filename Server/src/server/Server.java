@@ -8,16 +8,17 @@ import java.net.ServerSocket;
 import java.net.Socket;
 import java.util.ArrayList;
 import java.util.Iterator;
+import java.util.List;
 import java.util.Random;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 
 public class Server{
 
-    int tamanio = 100;
+    static int tamanio = 500000;
     ArrayList<Integer> valores = new ArrayList<>();
-    int listasRecibidas = 0;
-    ArrayList<ArrayList<Integer>> listas = new ArrayList<>();
+    static int[] listasRecibidas = new int[1];
+    static ArrayList<ArrayList<Integer>> listas = new ArrayList<>();
 
     public static void main(String[] args){
         Server server = new Server();
@@ -29,7 +30,6 @@ public class Server{
         try{
             servidor = new ServerSocket(puerto);
             int conexion = 0;
-            ArrayList<String> numerosOrdenadosList = new ArrayList<>();
             ArrayList<Socket> clientes = new ArrayList<>();
             while (clientes.size() < 4){
                 //Esperar conexiones nuevas
@@ -40,19 +40,50 @@ public class Server{
                 clientes.add(cliente);
             }
             int i = 0;
+            int division = (tamanio / 4);
+            int[] divisiones = new int[5];
+            divisiones[0] = 0;
+            for (int j = 1; j < 5; j++){
+                divisiones[j] = (division * j)-1;
+            }
+            int client = clientes.size();
             for (Socket cliente : clientes){
-                Servidor servicio = new Servidor(cliente, lista,this);
+                ArrayList<Integer> listaEnviar = castListToArray(lista.subList(divisiones[i], divisiones[i+1]));
+                Servidor servicio = new Servidor(cliente, listaEnviar);
+                servicio.setServer(server);
                 new Thread(servicio, "Cliente: " + String.valueOf(i)).start();
+//                if (client != 1){
+//                    for (int j = 0; j < division; j++){
+//                        lista.remove(j);
+//                    }
+//                }
+                i++;
+                client--;
+                System.out.println("Cliente: "+ i +" enviado");
             }
-            while (listas.size() != 4){
+            while (true){
+                if (listas.size() == 4){
+                    System.out.println("Listo para comenzar...");
+                    ArrayList<Integer> listaPrincipal = new ArrayList<>();
+                    for (Integer integer : listas.get(0)){
+                        listaPrincipal.add(integer);
+                    }
+                    listas.remove(0);
+                    while (!listas.isEmpty()){
+                        listaPrincipal = Server.merge(listaPrincipal, listas.get(0));
+                        listas.remove(0);
+                    }
+                    server.guardarArchivo(listaPrincipal, "Nombre");
+                    break;
+                }
+                try{
+                    Thread.sleep(1000);
+                    System.out.println("Tamaño de la lista:" + listas.size());
+                }catch (InterruptedException ex){
+                    Logger.getLogger(Server.class.getName()).log(Level.SEVERE, null, ex);
+                }
+
             }
-            
-            while(listas.size() != 2){
-                listas.get(0) = Server.merge(listas.get(0),listas.get(1));
-                listas.remove(1);
-            }
-            listas.get(0) = Server.merge(listas.get(0),listas.get(1));
-            server.guardarArchivo(listas.get(i), nombre);
         }catch (IOException ex){
             ex.printStackTrace();
         }finally{
@@ -65,9 +96,18 @@ public class Server{
 
     }
 
+    public static ArrayList castListToArray(List lista){
+        ArrayList resultado = new ArrayList<>();
+        for (Object object : lista){
+            resultado.add(object);
+        }
+        return resultado;
+    }
+
     public void recibirLista(ArrayList<Integer> lista){
         listas.add(lista);
-        listasRecibidas++;
+        listasRecibidas[0] = 1 + listasRecibidas[0];
+        System.out.println("Listas Recibidas:" + listasRecibidas[0]);
     }
 
     private ArrayList<Integer> generadorNumeros(){
@@ -106,7 +146,8 @@ public class Server{
         Integer x = it1.next();
         Integer y = it2.next();
         while (true){
-            if (x.compareTo(y) <= 0){
+            //Compara para saber cuál es menor
+            if (x <= y){
                 result.add(x);
                 if (it1.hasNext()){
                     x = it1.next();
