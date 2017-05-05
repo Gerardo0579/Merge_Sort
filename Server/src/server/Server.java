@@ -44,46 +44,46 @@ public class Server{
             int[] divisiones = new int[5];
             divisiones[0] = 0;
             for (int j = 1; j < 5; j++){
-                divisiones[j] = (division * j)-1;
+                divisiones[j] = (division * j) - 1;
             }
             int client = clientes.size();
+            ArrayList<Thread> clientesThread = new ArrayList<>();
             for (Socket cliente : clientes){
-                ArrayList<Integer> listaEnviar = castListToArray(lista.subList(divisiones[i], divisiones[i+1]));
+                ArrayList<Integer> listaEnviar = castListToArray(lista.subList(divisiones[i], (divisiones[i + 1])+1));
                 Servidor servicio = new Servidor(cliente, listaEnviar);
                 servicio.setServer(server);
-                new Thread(servicio, "Cliente: " + String.valueOf(i)).start();
-//                if (client != 1){
-//                    for (int j = 0; j < division; j++){
-//                        lista.remove(j);
-//                    }
-//                }
+                clientesThread.add(0, new Thread(servicio, "Cliente: " + String.valueOf(i)));
+                clientesThread.get(0).start();
                 i++;
-                client--;
-                System.out.println("Cliente: "+ i +" enviado");
+                System.out.println("Cliente: " + i + " enviado");
             }
+            //Espera todas las listas
             while (true){
-                if (listas.size() == 4){
-                    System.out.println("Listo para comenzar...");
-                    ArrayList<Integer> listaPrincipal = new ArrayList<>();
-                    for (Integer integer : listas.get(0)){
-                        listaPrincipal.add(integer);
-                    }
-                    listas.remove(0);
-                    while (!listas.isEmpty()){
-                        listaPrincipal = Server.merge(listaPrincipal, listas.get(0));
-                        listas.remove(0);
-                    }
-                    server.guardarArchivo(listaPrincipal, "Nombre");
-                    break;
-                }
                 try{
-                    Thread.sleep(1000);
-                    System.out.println("Tamaño de la lista:" + listas.size());
-                }catch (InterruptedException ex){
-                    Logger.getLogger(Server.class.getName()).log(Level.SEVERE, null, ex);
+                    for (Thread thread : clientesThread){
+                        thread.join();
+                    }
+                    break;
+                }catch (InterruptedException e){
+                    e.printStackTrace();
                 }
-
             }
+
+            System.out.println("Listo para comenzar...");
+            //A partir de aquí se empieza la mezcla
+            ArrayList<Integer> listaPrincipal = new ArrayList<>();
+            for (Integer integer : listas.get(0)){
+                listaPrincipal.add(integer);
+            }
+            listas.remove(0);
+            //se empiezan a mezclar la principal con las demás
+            //aquí pon el merge con hilos
+            while (!listas.isEmpty()){
+                listaPrincipal = Server.merge(listaPrincipal, listas.get(0));
+                listas.remove(0);
+            }
+            server.guardarArchivo(listaPrincipal, "Nombre");
+
         }catch (IOException ex){
             ex.printStackTrace();
         }finally{

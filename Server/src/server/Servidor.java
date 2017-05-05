@@ -44,7 +44,7 @@ class Servidor implements Runnable{
             }
             
             //Recibo los número ordenados del cliente
-            for (int i = 0; i < lista.size(); i++){
+            for (int i = 0; i < 125000; i++){
                 String numerosOrdenados = in.readLine();
                 numerosOrdenadosList.add(Integer.parseInt(numerosOrdenados));
             }
