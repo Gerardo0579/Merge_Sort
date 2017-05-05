@@ -8,12 +8,12 @@ import java.io.IOException;
 import java.io.InputStreamReader;
 import java.io.PrintWriter;
 import java.net.Socket;
-import java.util.ArrayList;
-import java.util.Iterator;
-import java.util.List;
 import java.util.Scanner;
 
 public class Client {
+    
+    private static final int NUMERO_HILOS = 16;
+    private static final int CANTIDAD_NUMEROS = 125000;
 
     public static void main(String[] args) {
 
@@ -42,23 +42,18 @@ public class Client {
             } catch (Exception ex) {
 
             }
-            //Sublista dónde guardaré los número que recibo
-            ArrayList<Integer> subLista = new ArrayList<>();
+            //Subarreglo dónde guardaré los número que recibo
+            int[] subArreglo = new int[CANTIDAD_NUMEROS];
 
             //Me conecto y recibo los número
-            for (int i = 0; i < 100; i++) {
+            for (int i = 0; i < CANTIDAD_NUMEROS; i++) {
                 String mensajeServidor = in.readLine();
-                //Agrego el número a la lista de integers
-                subLista.add(Integer.valueOf(mensajeServidor));
+                //Agrego el número al arreglo de números
+                subArreglo[i] = Integer.parseInt(mensajeServidor);
             }
-            //El mensaje recibido no viene en ArrayList :/... debo hacerlo ArrayList<Integer> ;)
+            
             //Aquí ocurre la magia ;)
-            ArrayList<Integer> numerosOrdenados = new ArrayList<>();
-
-            ArrayList<Integer> listaRes = mergeSort(subLista);
-            for (Integer listaRe : listaRes) {
-                numerosOrdenados.add(listaRe);
-            }
+            int[] numerosOrdenados = MergeSort.parallelMergeSort(subArreglo, NUMERO_HILOS);
 
             //Aquí sólo escribo en el documento cada línea ;)
             for (Integer numero : numerosOrdenados) {
@@ -84,65 +79,5 @@ public class Client {
                 e.printStackTrace();
             }
         }
-    }
-
-    public static ArrayList<Integer> merge(ArrayList<Integer> izquierda, ArrayList<Integer> derecha) {
-        ArrayList<Integer> result = new ArrayList<Integer>();
-        Iterator<Integer> it1 = izquierda.iterator();
-        Iterator<Integer> it2 = derecha.iterator();
-
-        Integer x = it1.next();
-        Integer y = it2.next();
-        while (true) {
-            //Compara para saber cuál es menor
-            if (x <= y) {
-                result.add(x);
-                if (it1.hasNext()) {
-                    x = it1.next();
-                } else {
-                    result.add(y);
-                    while (it2.hasNext()) {
-                        result.add(it2.next());
-                    }
-                    break;
-                }
-            } else {
-                result.add(y);
-                if (it2.hasNext()) {
-                    y = it2.next();
-                } else {
-                    result.add(x);
-                    while (it1.hasNext()) {
-                        result.add(it1.next());
-                    }
-                    break;
-                }
-            }
-        }
-        return result;
-    }
-
-    public static ArrayList<Integer> mergeSort(ArrayList<Integer> subLista) {
-        if (subLista.size() <= 1) {
-            return subLista;
-        }
-
-        int middle = subLista.size() / 2;
-        List<Integer> leftList = (List<Integer>) subLista.subList(0, middle);
-        List<Integer> rightList = (List<Integer>) subLista.subList(middle, subLista.size());
-        ArrayList<Integer> left = new ArrayList<>();
-        ArrayList<Integer> right = new ArrayList<>();
-        for (Integer integer : leftList) {
-            left.add(integer);
-        }
-        for (Integer integer : rightList) {
-            right.add(integer);
-        }
-
-        right = mergeSort(right);
-        left = mergeSort(left);
-        ArrayList<Integer> result = merge(left, right);
-
-        return result;
     }
 }
