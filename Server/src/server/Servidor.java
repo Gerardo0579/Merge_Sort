@@ -30,6 +30,7 @@ class Servidor implements Runnable{
     public void setServer(Server server){
         this.server = server;
     }
+
     @Override
     public void run(){
         //Recibo un mensaje para saber si me conecté. Si lo quitas, quizá algo salga mal porque el cliente tardará en ponerse a escuchar
@@ -38,13 +39,14 @@ class Servidor implements Runnable{
         try{
             mensajeConexion = in.readLine();
             System.out.println(mensajeConexion);
-            //Envio los números al cliente
+            out.println(String.valueOf(lista.size()));
             for (int i = 0; i < lista.size(); i++){
                 out.println(String.valueOf(lista.get(i)));
             }
-            
+
             //Recibo los número ordenados del cliente
-            for (int i = 0; i < 125000; i++){
+            //Esto va a generar un error si se cambia el valor de las listas
+            for (int i = 0; i < lista.size(); i++){
                 String numerosOrdenados = in.readLine();
                 numerosOrdenadosList.add(Integer.parseInt(numerosOrdenados));
             }

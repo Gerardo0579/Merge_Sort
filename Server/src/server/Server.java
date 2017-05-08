@@ -10,28 +10,40 @@ import java.util.ArrayList;
 import java.util.Iterator;
 import java.util.List;
 import java.util.Random;
+import java.util.Scanner;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 
 public class Server{
 
-    static int tamanio = 500000;
+    private static int tamanio;
+    private static int numeroClientes;
+
+    private static void setNumClientes(int nextInt){
+        numeroClientes = nextInt;
+    }
     ArrayList<Integer> valores = new ArrayList<>();
     static int[] listasRecibidas = new int[1];
     static ArrayList<ArrayList<Integer>> listas = new ArrayList<>();
 
     public static void main(String[] args){
         Server server = new Server();
+        Scanner sc = new Scanner(System.in);
+        System.out.println("cantidad de numeros: ");
+        setTamanio(sc.nextInt());
+        System.out.println("cantidad de clientes: ");
+        setNumClientes(sc.nextInt());
         ArrayList<Integer> lista = server.generadorNumeros();
         server.guardarArchivo(lista, "numerosGenerados");
         int puerto = 9090;
-
+        System.out.println("Servidor corriendo en:");
+        System.out.println("Puerto " + puerto);
         ServerSocket servidor = null;
         try{
             servidor = new ServerSocket(puerto);
             int conexion = 0;
             ArrayList<Socket> clientes = new ArrayList<>();
-            while (clientes.size() < 4){
+            while (clientes.size() < numeroClientes){
                 //Esperar conexiones nuevas
                 System.out.println("Esperando conexiones");
                 //Aceptada la conexion.
@@ -40,10 +52,10 @@ public class Server{
                 clientes.add(cliente);
             }
             int i = 0;
-            int division = (tamanio / 4);
-            int[] divisiones = new int[5];
+            int division = (tamanio / numeroClientes);
+            int[] divisiones = new int[numeroClientes+1];
             divisiones[0] = 0;
-            for (int j = 1; j < 5; j++){
+            for (int j = 1; j < numeroClientes+1; j++){
                 divisiones[j] = (division * j) - 1;
             }
             int client = clientes.size();
@@ -82,7 +94,7 @@ public class Server{
                 listaPrincipal = Server.merge(listaPrincipal, listas.get(0));
                 listas.remove(0);
             }
-            server.guardarArchivo(listaPrincipal, "Nombre");
+            server.guardarArchivo(listaPrincipal, "NumerosOrdenadosClientes");
 
         }catch (IOException ex){
             ex.printStackTrace();
@@ -172,6 +184,10 @@ public class Server{
             }
         }
         return result;
+    }
+
+    public static void setTamanio(int aTamanio){
+        tamanio = aTamanio;
     }
 
 }
